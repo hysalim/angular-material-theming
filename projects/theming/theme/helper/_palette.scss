@@ -1,0 +1,117 @@
+// MIT License
+//
+// Copyright (c) 2020 Hysalim
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+@use "sass:color";
+@use "sass:math";
+
+/// Calcul hue modification for accent palette
+/// @param {Color} $color
+
+@function modulo-hue($color) {
+  $hue: color.hue($color);
+  $hue-modification: $hue + 4 * 90deg;
+  @if ($hue-modification > 360deg) {
+    @return $hue-modification % 360deg;
+  }
+  @else {
+    @return $hue-modification;
+  }
+}
+
+/// Calcul accent color for palette
+/// @param {Color} $color - Base color 500
+/// @param {Percentage} $saturation - Percentage of saturation
+/// @param {Percentage} $lightness - Percentage of lightness
+
+@function calcul-accent($color, $saturation, $lightness) {
+  $saturation-color: color.saturation($color);
+  $lightness-color: color.lightness($color);
+  @return color.scale(color.mix($color, hsl(modulo-hue($color), $saturation-color, $lightness-color), 15%), $saturation: $saturation, $lightness: $lightness);
+}
+
+/// Calcul hue light of palette 50, 100, 200, 300, 400
+/// @param {Color} $color
+/// @param {Color} $base-light [white]
+/// @param {Percentage} $mix
+
+@function calcul-light-hue($color, $base-light: white, $mix) {
+  @return color.mix($color, $base-light, $mix);
+}
+
+/// Calul hue dark of palette 600, 700, 800, 900
+/// @param {Color} $color
+/// @param {Percentage} $mix
+
+@function calcul-dark-hue($color, $mix) {
+  $red: math.ceil(color.red($color) * color.red($color) / 255);
+  $green: math.ceil(color.green($color) * color.green($color) / 255);
+  $blue: math.ceil(color.blue($color) * color.blue($color) / 255);
+  $multiple: rgb($red, $green, $blue);
+  @return color.mix($color, $multiple, $mix);
+}
+
+/// Convert color to rgb color
+/// @param {Color | Number} $r - Color to hex or R for rgb color
+/// @param {Number | null} $g [null] - null for hex color or G for rgb color
+/// @param {Number | null} $b [null] - null for hex color or B for egb color
+/// @return {String} - Color rgba string: rgba(0,0,0,1)
+
+@function convert-to-rgb($r, $g: null, $b: null) {
+  @if ($g == null) {
+    @return unquote('rgb(#{$r})');
+  }
+  @if ($g and $b) {
+    @return unquote('rgb(#{$r}, #{$g}, #{$b})');
+  }
+  @error "Color is invalid ! Your color must be r: #hex color (#{$r}) or one value for r, g and b.";
+}
+
+/// Convert color to RGBA
+/// @param {Color | Number} $r - Color to hex or Red for RGBA color
+/// @param {Number} $g - Opacity if color is hex or Blue for RGBA color
+/// @param {Number | null} $b [null] - Null for hex or Green for RGBA color
+/// @param {Number | null} $a [null] - Null for hex or opacity for RGBA color
+/// @return {String} - [color rgba(...)]
+
+@function convert-to-rgba($r, $g: null, $b: null, $a: null) {
+  @if ($g: null) {
+    @return $r;
+  }
+  @if ($b == null) {
+    @return unquote('rgba(#{$r}, #{$b})');
+  }
+  @if ($b and $a) {
+    @return unquote('rgba(#{$r}, #{$g}, #{$b}, #{$a})');
+  }
+  @error "Color is invalid ! Your color must be r: #hex color and b: opacity or one value for r: red, g: green, b: blue, a: opacity.";
+}
+
+/// Convert hex color to RGBA SCSS
+/// @param {Color} $color - Color to convert
+/// @return {Color} - Color RGBA format
+
+@function convert-hex-to-rgb($color) {
+  @if ($color == null) {
+    @return null;
+  }
+  @return rgb(red($color), green($color), blue($color));
+}

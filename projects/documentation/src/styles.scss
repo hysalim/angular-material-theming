@@ -1,0 +1,17 @@
+@use "theme";
+@use "./styles/drawer";
+@use "./styles/toolbar";
+
+/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.app-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+@include drawer.core-styles;
+@include toolbar.core-styles;

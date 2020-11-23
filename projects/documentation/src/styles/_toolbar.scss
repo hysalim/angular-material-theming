@@ -1,0 +1,6 @@
+@mixin core-styles {
+  .mat-toolbar {
+    z-index: 4;
+    position: relative;
+  }
+}

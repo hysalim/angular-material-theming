@@ -1,0 +1,37 @@
+<mat-toolbar class="mat-elevation-z4" color="primary">
+  <button mat-icon-button>
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>Angular Material Theming</span>
+  <span class="mat-toolbar__spacer"></span>
+  <button mat-icon-button [matMenuTriggerFor]="menu">
+    <mat-icon>color_lens</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item *ngFor="let item of theme.themeList" (click)="theme.setMatTheme(item.dataClass)">
+      <span>{{item.name}}</span>
+    </button>
+  </mat-menu>
+  <button mat-icon-button>
+    <img #git src="./assets/git.svg">
+  </button>
+</mat-toolbar>
+
+<mat-drawer-container>
+  <mat-drawer></mat-drawer>
+  <mat-drawer-content>
+    <div class="app-wrapper">
+      <button mat-raised-button color="primary">Button</button>
+      <button mat-raised-button color="accent">Button</button>
+      <button mat-button>Test</button>
+    </div>
+    <mat-checkbox>Check box</mat-checkbox>
+    <mat-slide-toggle [checked]="(theme.dark$ |async)" (toggleChange)="theme.toggleDarkMode()">{{(theme.dark$ | async) ? 'Dark' : 'Light'}}</mat-slide-toggle>
+  </mat-drawer-content>
+</mat-drawer-container>
+<mat-card>
+  <img mat-card-lg-image src="assets/scarlett.jpg">
+  <mat-card-content>
+    <p>Djdeio heh ezuhfezufhezuheufh ezufh ezufhezhfezfezhfefzehuo fezhf ez</p>
+  </mat-card-content>
+</mat-card>

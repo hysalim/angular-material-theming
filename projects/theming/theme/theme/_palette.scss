@@ -1,0 +1,271 @@
+// MIT License
+//
+// Copyright (c) 2020 Hysalim
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+@use "../helper/palette";
+@use "./theme-color";
+
+/// Create palette colors with CSS variables
+/// @param {String} $name - primary, accent or warn
+
+@function create-var-palette($name) {
+  $base-palette: (
+    50: var(--mat-#{$name}-50),
+    100: var(--mat-#{$name}-100),
+    200: var(--mat-#{$name}-200),
+    300: var(--mat-#{$name}-300),
+    400: var(--mat-#{$name}-400),
+    500: var(--mat-#{$name}-500),
+    600: var(--mat-#{$name}-600),
+    700: var(--mat-#{$name}-700),
+    800: var(--mat-#{$name}-800),
+    900: var(--mat-#{$name}-900),
+    A100: var(--mat-#{$name}-A100),
+    A200: var(--mat-#{$name}-A200),
+    A400: var(--mat-#{$name}-A400),
+    A700: var(--mat-#{$name}-A700),
+    contrast: (
+      50: var(--mat-#{$name}-contrast-50),
+      100: var(--mat-#{$name}-contrast-100),
+      200: var(--mat-#{$name}-contrast-200),
+      300: var(--mat-#{$name}-contrast-300),
+      400: var(--mat-#{$name}-contrast-400),
+      500: var(--mat-#{$name}-contrast-500),
+      600: var(--mat-#{$name}-contrast-600),
+      700: var(--mat-#{$name}-contrast-700),
+      800: var(--mat-#{$name}-contrast-800),
+      900: var(--mat-#{$name}-contrast-900),
+      A100: var(--mat-#{$name}-contrast-A100),
+      A200: var(--mat-#{$name}-contrast-A200),
+      A400: var(--mat-#{$name}-contrast-A400),
+      A700: var(--mat-#{$name}-contrast-A700)
+    )
+  );
+  @return $base-palette;
+}
+
+/// Create colors palette
+/// @param {String} $name - Name for css variable primary | accent | warn
+/// @param {Color} $color - Base color for create palette
+/// @param {Number} $default [500] - Default hue color
+/// @param {Number} $lighter [100] - Lighter hue color
+/// @param {Number} $darker [700] - Darker hue color
+/// @param {Number} $text [$default] - Text hue color
+/// @param {Color} $base-light [#000] - Base light color
+/// @param {Color} $base-dark [#FFF] - Base dark color
+
+@function mat-light-palette($name, $color, $default: 500, $lighter: 100, $darker: 700, $text: $default, $base-light: #FFF, $base-dark: #000) {
+  $palette: (
+    #{$name}-50: palette.convert-hex-to-rgb(palette.calcul-light-hue($color, $base-light, 12%)),
+    #{$name}-100: palette.convert-hex-to-rgb(palette.calcul-light-hue($color, $base-light, 30%)),
+    #{$name}-200: palette.convert-hex-to-rgb(palette.calcul-light-hue($color, $base-light, 50%)),
+    #{$name}-300: palette.convert-hex-to-rgb(palette.calcul-light-hue($color, $base-light, 70%)),
+    #{$name}-400: palette.convert-hex-to-rgb(palette.calcul-light-hue($color, $base-light, 85%)),
+    #{$name}-500: palette.convert-hex-to-rgb($color),
+    #{$name}-600: palette.convert-hex-to-rgb(palette.calcul-dark-hue($color, 87%)),
+    #{$name}-700: palette.convert-hex-to-rgb(palette.calcul-dark-hue($color, 70%)),
+    #{$name}-800: palette.convert-hex-to-rgb(palette.calcul-dark-hue($color, 54%)),
+    #{$name}-900: palette.convert-hex-to-rgb(palette.calcul-dark-hue($color, 25%)),
+    #{$name}-A100: palette.convert-hex-to-rgb(palette.calcul-accent($color, 80%, 65%)),
+    #{$name}-A200: palette.convert-hex-to-rgb(palette.calcul-accent($color, 80%, 55%)),
+    #{$name}-A400: palette.convert-hex-to-rgb(palette.calcul-accent($color, 100%, 45%)),
+    #{$name}-A700: palette.convert-hex-to-rgb(palette.calcul-accent($color, 100%, 40%)),
+    #{$name}-contrast-50: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-light-hue($color, $base-light, 12%))),
+    #{$name}-contrast-100: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-light-hue($color, $base-light, 30%))),
+    #{$name}-contrast-200: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-light-hue($color, $base-light, 50%))),
+    #{$name}-contrast-300: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-light-hue($color, $base-light, 70%))),
+    #{$name}-contrast-400: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-light-hue($color, $base-light, 85%))),
+    #{$name}-contrast-500: palette.convert-hex-to-rgb(theme-color.accessible-ink-color($color)),
+    #{$name}-contrats-600: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-dark-hue($color, 87%))),
+    #{$name}-contrast-700: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-dark-hue($color, 70%))),
+    #{$name}-contrast-800: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-dark-hue($color, 54%))),
+    #{$name}-contrast-900: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-dark-hue($color, 25%))),
+    #{$name}-contrast-A100: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-accent($color, 80%, 65%))),
+    #{$name}-contrast-A200: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-accent($color, 80%, 55%))),
+    #{$name}-contrast-A400: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-accent($color, 100%, 45%))),
+    #{$name}-contrast-A700: palette.convert-hex-to-rgb(theme-color.accessible-ink-color(palette.calcul-accent($color, 100%, 40%))),
+    #{$name}-default: var(--mat-theme-#{$name}-#{$default}),
+    #{$name}-lighter: var(--mat-theme-#{$name}-#{$lighter}),
+    #{$name}-darker: var(--mat-theme-#{$name}-#{$darker}),
+    #{$name}-text: var(--mat-theme-#{$name}-#{$text}),
+    #{$name}-contrast-default: var(--mat-theme-#{$name}-contrast-#{$default}),
+    #{$name}-contrast-lighter: var(--mat-theme-#{$name}-contrast-#{$lighter}),
+    #{$name}-contrast-darker: var(--mat-theme-#{$name}-contrast-#{$darker})
+  );
+  @return $palette;
+}
+
+/// Create dark colors palette
+/// @param {String} $name - Name for css variable primary | accent | warn
+/// @param {Color} $color - Base color for create palette
+/// @param {Number} $default [500] - Default hue color
+/// @param {Number} $lighter [100] - Lighter hue color
+/// @param {Number} $darker [700] - Darker hue color
+/// @param {Number} $text [$default] - Text hue color
+/// @param {Color} $base-light [#FFF] - Base light color
+/// @param {Color} $base-dark [#000] - base dark color
+
+@function mat-dark-palette($name, $color, $default: 500, $lighter: 100, $darker: 700, $text: $default, $base-light: #FFF, $base-dark: #000) {
+  @if $default > 300 {
+    $default: $default - 300;
+  }
+  @else if $default == 300 {
+    $default: 50;
+  }
+  @if $darker > 400 {
+    $darker: $darker - 300;
+  }
+  $palette: mat-light-palette($name, $color, $default, $lighter, $darker, $text, $base-light, $base-dark);
+  @return $palette;
+}
+
+
+/// Create foreground with CSS variables
+/// @return {List} - Foreground for mat-theme
+
+@function create-var-foreground() {
+  $foreground: (
+    base:              var(--mat-theme-base),
+    divider:           var(--mat-theme-divider),
+    dividers:          var(--mat-theme-divider),
+    disabled:          var(--mat-theme-disabled),
+    disabled-button:   var(--mat-theme-disabled-button),
+    disabled-text:     var(--mat-theme-disabled),
+    elevation:         black,
+    hint-text:         var(--mat-theme-disabled),
+    secondary-text:    var(--mat-theme-secondary-text),
+    icon:              var(--mat-theme-icon),
+    icons:             var(--mat-theme-icon),
+    text:              var(--mat-theme-text),
+    slider-min:        var(--mat-theme-text),
+    slider-off:        var(--mat-theme-slide-off),
+    slider-off-active: var(--mat-theme-slide-off-active)
+  );
+  @return $foreground;
+}
+
+/// Create foreground colors palette
+/// @param {Color} $base - Base dark color
+
+@function mat-light-foreground($base) {
+  $foreground: (
+    base: $base,
+    divider: rgba($base, .12),
+    disabled: rgba($base, .38),
+    disabled-button: rgba($base, .26),
+    elevation: black,
+    secondary-text: rgba($base, .54),
+    icon: rgba($base, .54),
+    text: rgba($base, .87),
+    slider-off: rgba($base, .26),
+    slider-off-active: rgba($base, .38)
+  );
+  @return $foreground;
+}
+
+/// Create dark foreground colors palette
+/// @param {Color} $base - Base light color
+
+@function mat-dark-foreground($base) {
+  $foreground: (
+    base: $base,
+    divider: rgba($base, .12),
+    disabled: rgba($base, .5),
+    disabled-button: rgba($base, .3),
+    elevation: black,
+    secondary-text: rgba($base, .7),
+    icon: $base,
+    text: $base,
+    slider-off: rgba($base, .3),
+    slider-off-active: rgba($base, .3)
+  );
+  @return $foreground;
+}
+
+/// Create background with CSS variables
+/// @return {List} - Background for mat-theme
+
+@function create-var-background() {
+  $background: (
+    status-bar: var(--mat-status-bar),
+    app-bar:    var(--mat-theme-app-bar),
+    background: var(--mat-theme-background),
+    hover:      var(--mat-theme-hover), // TODO(kara): check style with Material Design UX
+    card:       var(--mat-theme-surface),
+    dialog:     var(--mat-theme-surface),
+    disabled-button: var(--mat-theme-disabled-button-background),
+    raised-button:  var(--mat-theme-surface),
+    focused-button: var(--mat-theme-focused),
+    selected-button: var(--mat-theme-selected),
+    selected-disabled-button: var(--mat-theme-selected-disabled),
+    disabled-button-toggle: var(--mat-theme-disabled-component),
+    unselected-chip: var(--mat-theme-unselect-chip),
+    disabled-list-option: var(--mat-theme-disabled-component),
+    tooltip: var(--mat-theme-tooltip)
+  );
+  @return $background;
+}
+
+/// Create background colors palette
+/// @param {Color} $status - Color of the status bar
+/// @param {Color} $base-light-color - Base light color
+/// @param {Color} $base-dark-color - Background Color
+
+@function mat-light-background($status, $base-light-color, $base-dark-color) {
+  $background: (
+    status-bar: $status,
+    app-bar: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 98%)),
+    background: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 98%)),
+    hover: rgba($base-dark-color, .04),
+    surface: $base-light-color,
+    disabled-button-background: rgba($base-dark-color, .12),
+    focused: rgba($base-dark-color, .38),
+    selected: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 88%)),
+    selected-disabled: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 74%)),
+    disabled-component: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 93%)),
+    unselect-chip: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 88%)),
+    tooltip: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 38%))
+  );
+  @return $background;
+}
+
+/// Create dark background colors palette
+/// @param {Color} $status - Color of the status bar
+/// @param {Color} $base-light-color - Base light color
+/// @param {Color} $base-dark-color - Background Color or Background mix with primary color
+
+@function mat-dark-background($status, $base-light-color, $base-dark-color) {
+  $background: (
+    status-bar: $status,
+    app-bar: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 87%)),
+    background: $base-dark-color,
+    hover: rgba($base-light-color, .04),
+    surface: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 75%)),
+    disabled-button-background: rgba($base-light-color, .12),
+    focused: rgba($base-light-color, .38),
+    selected: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 87%)),
+    selected-disabled: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 75%)),
+    disabled-component: black,
+    unselect-chip: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 62%)),
+    tooltip: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 62%))
+  );
+  @return $background;
+}

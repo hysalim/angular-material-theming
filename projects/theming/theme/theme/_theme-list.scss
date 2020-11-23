@@ -1,0 +1,71 @@
+// MIT License
+//
+// Copyright (c) 2020 Hysalim
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+@use "sass:map";
+
+$theme-list: (
+  default: (),
+  test: (
+    primary: (color: #56EE89)
+  ),
+  sans-material: (
+    primary: (color: #9826),
+    darkBackground: #303030,
+    darkThemeMixToPrimary: "false",
+    darkMaterialReference: "false"
+  )
+) !default;
+
+$_base-theme: (
+  light-color: #FFF,
+  dark-color: #000,
+  light-status-bar: #E0E0E0,
+  dark-status-bar: black,
+  primary: (color: #6200EE, default: 500, lighter: 100, darker: 700, text: 500),
+  accent: (color: #018786, default: 500, lighter: 100, darker: 700, text: 500),
+  warn: (color: #B00020, default: 500, lighter: 100, darker: 700, text: 500),
+  darkBackground: #121212,
+  darkThemeMixToPrimary: "true",
+  darkMaterialReference: "true"
+) !default;
+
+@function create-theme-base($theme, $name) {
+  $theme-with-base: map.merge($_base-theme, $theme);
+  @if map.get($theme, primary) {
+    $primary: (primary: map.merge(map.get($_base-theme, primary), map.get($theme, primary)));
+    $theme-with-base: map.merge($theme-with-base, ($primary));
+  }
+  @if map.get($theme, accent) {
+    $accent: (accent: map.merge(map.get($_base-theme, accent), map.get($theme, accent)));
+    $theme-with-base: map.merge($theme-with-base, $accent);
+  }
+  @if map.get($theme, warn) {
+    $warn: (warn: map.merge(map.get($_base-theme, warn), map.get($theme, warn)));
+    $theme-with-base: map.merge($theme-with-base, $warn);
+  }
+  $theme-with-name: (#{$name}: $theme-with-base);
+  @return $theme-with-name;
+}
+
+@each $name, $theme in $theme-list {
+  $theme-list: map.merge($theme-list, create-theme-base($theme, $name));
+}

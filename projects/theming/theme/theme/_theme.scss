@@ -1,0 +1,504 @@
+// MIT License
+//
+// Copyright (c) 2020 Hysalim
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+@use "sass:color";
+@use "sass:map";
+@use "sass:meta";
+@use "../helper/css";
+@use "../helper/custom-properties";
+@use "../helper/gss";
+@use "../helper/replace";
+@use "../helper/palette" as palette-helper;
+@use "./palette";
+@use "./theme-color";
+@use "./theme-list";
+@use "@angular/material/theming";
+
+
+$typography: null;
+
+/// Create palette for default theme
+/// @param {List} $color-list - Primary, accent or warn palette
+/// @param {String} $name - Name of palette primary | accent | warn
+
+@function reinit-palette($color-list, $name) {
+  $palette: map.merge($color-list,(
+    default: var(--mat-theme-#{$name}-default),
+    lighter: var(--mat-theme-#{$name}-lighter),
+    darker: var(--mat-theme-#{$name}-darker),
+    text: var(--mat-theme-#{$name}-text),
+    default-contrast: var(--mat-theme-#{$name}-default-contrast),
+    lighter-contrast: var(--mat-theme-#{$name}-lighter-contrast),
+    darker-contrast: var(--mat-theme-#{$name}-darker-contrast)
+  ));
+  @return $palette;
+}
+
+/// Initialize mat-theme
+
+@mixin core-styles() {
+  // CREATION VARS
+  @include _mat-var-scss();
+
+  // CREATION DEFAULT THEME
+  @include _mat-default-theme();
+
+  // CREATION OTHER THEME
+  @each $theme-name, $theme in theme-list.$theme-list {
+    @if $theme-name != "default" {
+      @include _mat-light-theme($theme, $theme-name);
+      @include _mat-dark-theme($theme, $theme-name);
+    }
+  }
+}
+
+/// Create css variables
+/// --mat-theme-[name]-[property]
+
+@mixin _mat-var-scss() {
+  @if $typography != null {
+    @include theming.mat-core($typograghy);
+  }
+  @else {
+    @include theming.mat-core();
+  }
+  $primary: theming.mat-palette(palette.create-var-palette(primary));
+  $primary: reinit-palette($primary, primary);
+
+  $accent: theming.mat-palette(palette.create-var-palette(accent));
+  $accent: reinit-palette($accent, accent);
+
+  $warn: theming.mat-palette(palette.create-var-palette(warn));
+  $warn: reinit-palette($warn, warn);
+
+  $theme: theming.mat-light-theme($primary, $accent, $warn);
+  $other-props: (
+    foreground: palette.create-var-foreground(),
+    background: palette.create-var-background()
+  );
+  $theme-light: map.merge($theme,$other-props);
+  @include theming.angular-material-theme($theme-light);
+}
+
+/// Create default theme
+
+@mixin _mat-default-theme() {
+  @at-root :root {
+    // light theme
+    @each $prop, $value in theme-color.$property-values {
+      --mat-theme-#{$prop}: #{$value};
+    }
+    // dark theme
+    &[data-dark="true"] {
+      @each $prop, $value in theme-color.$property-values-dark {
+        --mat-theme-#{$prop}: #{$value};
+      }
+      @if map.get(theme-color.$theme-default, darkMaterialReference) != false {
+        @include _mat-primary(theme-color.$theme-default);
+        @include _mat-elevation();
+        @include _mat-dark-image();
+      }
+      @if map.get(theme-color.$theme-default, darkThemingMixToPrimary) != false {
+        $_surface: palette-helper.convert-hex-to-rgb(palette-helper.calcul-light-hue(map.get(theme-color.$theme-default, dark-color), map.get(theme-color.$theme-default, light-color), 75%));
+        $_surface: theme-color.darkThemeMixToPrimary(map.get(map.get(theme-color.$theme-default, primary), color), $_surface);
+        --mat-theme-background: #{color.mix(map.get(map.get(theme-color.$theme-default, primary), color), map.get(theme-color.$theme-default,darkBackground), $weight: 8%)};
+        --mat-theme-surface: #{$_surface};
+      }
+    }
+  }
+}
+
+/// Create a light theme
+/// @param {List} $theme - Theme based on $_base-theme (cf. _theme-list.scss)
+/// @param {String} $name - Name of data-theme
+
+@mixin _mat-light-theme($theme, $name) {
+  $primary-color: map.get($theme, primary);
+  $primary: palette.mat-light-palette(
+    primary,
+    map.get($primary-color, color),
+    map.get($primary-color, default),
+    map.get($primary-color, lighter),
+    map.get($primary-color, darker),
+    $base-light: map.get($theme, light-color),
+    $base-dark: map.get($theme, dark-color)
+  );
+
+  $accent-color: map.get($theme, accent);
+  $accent: palette.mat-light-palette(
+    accent,
+    map.get($accent-color, color),
+    map.get($accent-color, default),
+    map.get($accent-color, lighter),
+    map.get($accent-color, darker),
+    $base-light: map.get($theme, light-color),
+    $base-dark: map.get($theme, dark-color)
+  );
+
+  $warn-color: map.get($theme, warn);
+  $warn: palette.mat-light-palette(
+    warn,
+    map.get($warn-color, color),
+    map.get($warn-color, default),
+    map.get($warn-color, lighter),
+    map.get($warn-color, darker),
+    $base-light: map.get($theme, light-color),
+    $base-dark: map.get($theme, dark-color)
+  );
+
+  $foreground: mat-light-foreground(map.get($theme, light-color));
+  $background: mat-light-background(map.get($theme, dark-color));
+
+  @at-root :root {
+    &[data-theme="#{$name}"] {
+      @include _include-list-properties($primary);
+      @include _include-list-properties($accent);
+      @include _include-list-properties($warn);
+      @include _include-list-properties($foreground);
+      @include _include-list-properties($background);
+    }
+  }
+}
+
+/// Create a dark theme
+/// @param {List} $theme - Theme based on $_base-theme (cf. _theme-list.scss)
+/// @param {String} $name - Name of data-theme
+
+@mixin _mat-dark-theme($theme, $name) {
+  // CREATE PALETTE
+  $foreground: mat-dark-foreground(map.get($theme, light-color));
+  $background: mat-dark-background(map.get($theme, dark-status-bar), map.get($theme, light-color), map.get($theme, dark-color));
+
+  @at-root :root {
+    &[data-theme="#{$name}"] {
+      &[data-dark="true"] {
+        @include _include-list-properties-dark($foreground);
+        @include _include-list-properties-dark($background);
+        @if map.get($theme, darkMaterialReference) != false {
+          @include _include-dark-material-theme($theme);
+        }
+        @if map.get($theme, darkMaterialReference) != true and map.get($theme, darkThemeMixToPrimary) != false {
+          $props: _mat-mix-to-primary($theme);
+          @include _include-list-properties-dark($props);
+        }
+      }
+    }
+  }
+}
+
+/// Create the material specifications for the dark theme
+/// @link https://material.io/design/color/dark-theme.html
+/// @param {List} $theme - Theme to which we want to apply the material dark theme specifications
+
+@mixin _include-dark-material-theme($theme) {
+  $_surface: palette-helper.convert-hex-to-rgb(palette-helper.calcul-light-hue(map.get($theme, dark-color), map.get($theme, light-color), 75%));
+  $other-properties: (
+    background: map.get($theme, darkBackground),
+    surface: $_surface
+  );
+  @if map.get($theme, darkThemeMixToPrimary) != false {
+    $other-properties: _mat-mix-to-primary($theme);
+  }
+
+  @include _mat-primary($theme);
+  @include _include-list-properties-dark($other-properties);
+  @include _mat-elevation($theme);
+  @include _mat-dark-image();
+}
+
+/// Desaturated primary color for accessibility
+/// @link https://material.io/design/color/dark-theme.html#ui-application
+/// @param {List} $theme - Theme to which we want to apply the desaturation
+
+@mixin _mat-primary($theme) {
+  $default: map.get(map.get($theme, primary), default);
+  @if $default > 300 {
+    $default: $default - 300;
+  }
+  @else if $default == 300 {
+    $default: 50;
+  }
+  $darker: map.get(map.get($theme, primary), darker);
+  @if $darker > 400 {
+    $darker: $darker - 300;
+  }
+  --mat-theme-primary-default:            var(--mat-theme-primary-#{$default});
+  --mat-theme-primary-darker:             var(--mat-theme-primary-#{$darker});
+  --mat-theme-primary-text:               var(--mat-theme-primary-#{$default});
+  --mat-theme-primary-default-contrast:   var(--mat-theme-primary-contrast-#{$default});
+  --mat-theme-primary-darker-contrast:    var(--mat-theme-primary-contrast-#{$darker});
+}
+
+/// Create background and surface color with mix to primary color
+/// @param {List} $theme - Theme to which we want to apply the mix colors
+/// @return {List}
+
+@function _mat-mix-to-primary($theme) {
+  $_surface: palette-helper.convert-hex-to-rgb(palette-helper.calcul-light-hue(map.get($theme, dark-color), map.get($theme, light-color), 75%));
+
+  $props: (
+    background: theme-color.darkThemeMixToPrimary(map.get(map.get($theme, primary),color), map.get($theme, darkBackground)),
+    surface: theme-color.darkThemeMixToPrimary(map.get(map.get($theme, primary), color), $_surface)
+  );
+  @return $props;
+}
+
+/// Include property value if it doesn't exist in $property-values
+/// @param {String} $prop - Property
+/// @param {String} $value - Property value
+
+@mixin _include-property($prop, $value) {
+  @if map.get(theme-color.$property-values, $prop) != $value {
+    --mat-theme-#{$prop}: #{$value};
+  }
+}
+
+@mixin _include-list-properties($prop-values) {
+  @each $prop, $value in $prop-values {
+    @include _include-property($prop, $value);
+  }
+}
+
+@mixin _include-list-properties-dark($prop-values) {
+  @each $prop, $value in $prop-values {
+    @if map.get(theme-color.$property-values-dark, $prop) != $value {
+      --mat-theme-#{$prop}: #{$value};
+    }
+  }
+}
+
+/// Create dark elevation according to the referential material theming
+/// Only apply on element with class 'mat-elevation-z[n]'
+/// Add class 'mat-elevation--without-dark' if you doesn't want apply style on element
+/// Or in SCSS file @inclue mat-elevation(z)
+/// @link https://material.io/design/color/dark-theme.html#properties
+/// @param {Boolean} $darkMaterialReference - True if dark elevation is create according to the material theming
+/// @param {Color} $base-dark [#121212] - Base color
+
+@mixin _elevation($base-dark: #121212) {
+  .mat-elevation-z0:not(.mat-elevation--without-dark) {
+    background-color: color.mix(theme-color.$base-light-color, $base-dark, $weight: 0%);
+  }
+  .mat-elevation-z1:not(.mat-elevation--without-dark) {
+    background-color: color.mix(theme-color.$base-light-color, $base-dark, $weight: 5%);
+  }
+  .mat-elevation-z2:not(.mat-elevation--without-dark) {
+    background-color: color.mix(theme-color.$base-light-color, $base-dark, $weight: 7%);
+  }
+  .mat-elevation-z3:not(.mat-elevation--without-dark) {
+    background-color: color.mix(theme-color.$base-light-color, $base-dark, $weight: 8%);
+  }
+  .mat-elevation-z4:not(.mat-elevation--without-dark) {
+    background-color: color.mix(theme-color.$base-light-color, $base-dark, $weight: 9%);
+  }
+  .mat-elevation-z6:not(.mat-elevation--without-dark) {
+    background-color: color.mix(theme-color.$base-light-color, $base-dark, $weight: 11%);
+  }
+  .mat-elevation-z8:not(.mat-elevation--without-dark) {
+    background-color: color.mix(theme-color.$base-light-color, $base-dark, $weight: 12%);
+  }
+  .mat-elevation-z16:not(.mat-elevation--without-dark) {
+    background-color: color.mix(theme-color.$base-light-color, $base-dark, $weight: 15%);
+  }
+  .mat-elevation-z24:not(.mat-elevation--without-dark) {
+    background-color: color.mix(theme-color.$base-light-color, $base-dark, $weight: 16%);
+  }
+}
+
+/// Create dark elevation according to the referential material theming
+/// Only apply on element with class 'mat-elevation-z[n]'
+/// Add class 'mat-elevation--without-dark' if you doesn't want apply style on element
+/// Or in SCSS file @inclue mat-elevation(z)
+/// @link https://material.io/design/color/dark-theme.html#properties
+/// @param {List} $theme - Theme to which we want to apply the elevation
+
+@mixin _mat-elevation($theme: theme-color.$theme-default) {
+  $background: map.get($theme, darkBackground);
+  $light-color: map.get($theme, light-color);
+  $dark-mix: map.get($theme, darkThemingMixToPrimary);
+  @if $dark-mix != false {
+    $background: color.mix(map.get(map.get($theme, primary), color), map.get($theme,darkBackground), $weight: 8%);
+  }
+  .mat-elevation-z0:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 0%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z1:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 5%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z2:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 7%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z3:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 8%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z4:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 9%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z5:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 10%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z6:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 11%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z7:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 11.5%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z8:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 12%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z9:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 12.4%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z10:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 12.8%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z11:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 13.2%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z12:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 13.6%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z13:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 14%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z14:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 14.4%);
+  }
+  .mat-elevation-z15:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 14.8%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z16:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 15%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z17:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 15.12%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z18:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 15.24%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z19:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 15.36%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z20:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 15.48%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z21:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 15.6%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z22:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 15.72%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z23:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 15.84%);
+    color: var(--mat-theme-text);
+  }
+  .mat-elevation-z24:not(.mat-elevation--without-dark) {
+    background-color: color.mix($light-color, $background, $weight: 16%);
+    color: var(--mat-theme-text);
+  }
+}
+
+/// Decrease th brightness and contrast of images a bit so that it looks comfortable to the eyes
+/// when it’s against a dark background.
+/// A super bright image on a super dark background can be jarring and dimming the image reduces
+/// some of that heavy contrast.
+
+@mixin _mat-dark-image() {
+  img {
+    filter: brightness(.8) contrast(1.2);
+  }
+}
+
+@mixin property(
+  $property,
+  $value,
+  $gss: (),
+  $replace: null,
+  $important: false
+) {
+  @if custom-properties.is-custom-prop($value) {
+    // $value is a custom property Map
+    @include custom-properties.apply(
+      $property,
+      $value,
+      $gss: $gss,
+      $important: $important
+    );
+  } @else if map.has-key(theme-color.$property-values, $value) {
+    // $value is a theme property String
+    $custom-prop: theme-color.get-custom-property($value);
+    @include custom-properties.apply(
+      $property,
+      $custom-prop,
+      $gss: $gss,
+      $important: $important
+    );
+  } @else {
+    // $value is a standard CSS value
+    $fallback: null;
+    @if $replace {
+      @if meta.type-of($value) != 'string' {
+        // theme.property() should support non-string replacements in the
+        // future, such as List types
+        // e.g. theme.property(border-radius, 8px foo, $replace: (foo: $foo));
+        @error 'mat-theme: Invalid replacement value #{$value}. $replace may only be used with string values.';
+      }
+
+      $fallback: replace.replace-string($value, $replace, $fallback: true);
+      $value: replace.replace-string($value, $replace);
+      @if $fallback == $value {
+        // The replacements don't contain custom properties with fallbacks
+        $fallback: null;
+      }
+    }
+
+    @include css.declaration(
+      $property,
+      $value,
+      $fallback-value: $fallback,
+      $gss: $gss,
+      $important: $important
+    );
+  }
+}

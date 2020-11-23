@@ -1,0 +1,5 @@
+@use "./component";
+@use "./theme";
+@include component.body-core-styles;
+@include component.toolbar-core-styles;
+@include theme.core-styles;

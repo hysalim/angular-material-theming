@@ -1,0 +1,376 @@
+// MIT License
+//
+// Copyright (c) 2020 Hysalim
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+@use "sass:color";
+@use "sass:list";
+@use "sass:map";
+@use "sass:math";
+@use "sass:meta";
+@use "sass:string";
+@use "../helper/constants";
+@use "../helper/custom-properties";
+@use "../helper/palette";
+@use "./theme-list";
+
+$theme-default:          map.get(theme-list.$theme-list,default);
+
+$base-light-color:       map.get($theme-default, light-color) !default;
+$base-dark-color:        map.get($theme-default, dark-color) !default;
+
+$base-light-status-bar:  map.get($theme-default, light-status-bar) !default;
+$base-dark-status-bar:   map.get($theme-default, dark-status-bar) !default;
+
+$primary:                map.get(map.get($theme-default,primary), color);
+$accent:                 map.get(map.get($theme-default,accent), color);;
+$warn:                   map.get(map.get($theme-default,warn), color);;
+
+$_minimumContrast:        3.1;
+
+/// Calculate luminance for a color
+/// @link https://www.w3.org/TR/WCAG20-TECHS/G17.html#G17-tests
+/// @param {Color} $color - Color to test.
+/// @return {Number} - Color's luminance
+
+@function luminance($color) {
+  $red: list.nth(constants.$linear-channel-values, color.red($color) + 1);
+  $green: list.nth(constants.$linear-channel-values, color.green($color) + 1);
+  $blue: list.nth(constants.$linear-channel-values, color.blue($color) + 1);
+  @return 0.2126 * $red + 0.7152 * $green + 0.0722 * $blue;
+}
+
+/// Calculate contrast ratio between two colors
+/// @link https://www.w3.org/TR/WCAG20-TECHS/G17.html#G17-tests
+/// @param {Color} $back - Background color
+/// @param {Color} $front - Front color
+/// @return {Number} - Contrast ratio
+
+@function contrast($back, $front) {
+  $backLum: luminance($back) + 0.05;
+  $frontLum: luminance($front) + 0.05;
+  @return math.max($backLum, $frontLum) / math.min($backLum, $frontLum);
+}
+
+/// Determine whether color is light or dark
+/// @param {Color} $color Color to test
+/// @return {String} Tone color "light" or "dark"
+
+@function tone($color) {
+  @if $color == "dark" or $color == "light" {
+    @return $color;
+  }
+  $lightContrast: contrast($color, white);
+  $darkContrast: contrast($color, rgba(black, .87));
+  @if ($lightContrast < $_minimumContrast) and ($darkContrast > $lightContrast) {
+    @return "light";
+  }
+  @else {
+    @return "dark";
+  }
+}
+
+@function accessible-ink-color($color, $light-color: $base-light-color, $dark-color: $base-dark-color) {
+  $primary-dark-color:     $light-color;
+  $secondary-dark-color:   rgba($light-color, .7);
+  $secondary-light-color:    rgba($dark-color, .54);
+  $primary-light-color:      rgba($dark-color, .87);
+
+  $lightContrastPrimary:    contrast($color, $primary-light-color);
+  $lightContrastSecondary:  contrast($color, $secondary-light-color);
+  $darkContrastSecondary:   contrast($color, $secondary-dark-color);
+  $darkContrastPrimary:     contrast($color, $primary-dark-color);
+
+  @if tone($color) != dark {
+    @if($darkContrastSecondary > $_minimumContrast) and ($darkContrastPrimary < $darkContrastSecondary) {
+      @return $secondary-light-color;
+    }
+    @else {
+      @return $primary-light-color;
+    }
+  }
+  @else {
+    @if($lightContrastSecondary > $_minimumContrast) and ($lightContrastPrimary < $lightContrastSecondary) {
+      @return $secondary-dark-color;
+    }
+    @else {
+      @return $primary-dark-color;
+    }
+  }
+}
+
+$property-values: (
+  // PRIMARY PALETTE
+  primary-50:             palette.convert-hex-to-rgb(palette.calcul-light-hue($primary, $base-light-color, 12%)),
+  primary-100:            palette.convert-hex-to-rgb(palette.calcul-light-hue($primary, $base-light-color, 30%)),
+  primary-200:            palette.convert-hex-to-rgb(palette.calcul-light-hue($primary, $base-light-color, 50%)),
+  primary-300:            palette.convert-hex-to-rgb(palette.calcul-light-hue($primary, $base-light-color, 70%)),
+  primary-400:            palette.convert-hex-to-rgb(palette.calcul-light-hue($primary, $base-light-color, 85%)),
+  primary-500:            palette.convert-hex-to-rgb($primary),
+  primary-600:            palette.convert-hex-to-rgb(palette.calcul-dark-hue($primary, 87%)),
+  primary-700:            palette.convert-hex-to-rgb(palette.calcul-dark-hue($primary, 70%)),
+  primary-800:            palette.convert-hex-to-rgb(palette.calcul-dark-hue($primary, 54%)),
+  primary-900:            palette.convert-hex-to-rgb(palette.calcul-dark-hue($primary, 25%)),
+  primary-A100:           palette.convert-hex-to-rgb(palette.calcul-accent($primary, 80%, 65%)),
+  primary-A200:           palette.convert-hex-to-rgb(palette.calcul-accent($primary, 80%, 55%)),
+  primary-A400:           palette.convert-hex-to-rgb(palette.calcul-accent($primary, 100%, 45%)),
+  primary-A700:           palette.convert-hex-to-rgb(palette.calcul-accent($primary, 100%, 40%)),
+  primary-contrast-50:    accessible-ink-color(palette.calcul-light-hue($primary, $base-light-color, 12%)),
+  primary-contrast-100:   accessible-ink-color(palette.calcul-light-hue($primary, $base-light-color, 30%)),
+  primary-contrast-200:   accessible-ink-color(palette.calcul-light-hue($primary, $base-light-color, 50%)),
+  primary-contrast-300:   accessible-ink-color(palette.calcul-light-hue($primary, $base-light-color, 70%)),
+  primary-contrast-400:   accessible-ink-color(palette.calcul-light-hue($primary, $base-light-color, 85%)),
+  primary-contrast-500:   accessible-ink-color($primary),
+  primary-contrast-600:   accessible-ink-color(palette.calcul-dark-hue($primary, 87%)),
+  primary-contrast-700:   accessible-ink-color(palette.calcul-dark-hue($primary, 70%)),
+  primary-contrast-800:   accessible-ink-color(palette.calcul-dark-hue($primary, 54%)),
+  primary-contrast-900:   accessible-ink-color(palette.calcul-dark-hue($primary, 25%)),
+  primary-contrast-A100:  accessible-ink-color(palette.calcul-accent($primary, 80%, 65%)),
+  primary-contrast-A200:  accessible-ink-color(palette.calcul-accent($primary, 80%, 55%)),
+  primary-contrast-A400:  accessible-ink-color(palette.calcul-accent($primary, 100%, 45%)),
+  primary-contrast-A700:  accessible-ink-color(palette.calcul-accent($primary, 100%, 40%)),
+  primary-default:        var(--mat-theme-primary-#{map.get(map.get($theme-default, primary), default)}),
+  primary-lighter:        var(--mat-theme-primary-#{map.get(map.get($theme-default, primary), lighter)}),
+  primary-darker:         var(--mat-theme-primary-#{map.get(map.get($theme-default, primary), darker)}),
+  primary-text:           var(--mat-theme-primary-#{map.get(map.get($theme-default, primary), text)}),
+  primary-default-contrast: var(--mat-theme-primary-contrast-#{map.get(map.get($theme-default, primary), default)}),
+  primary-lighter-contrast: var(--mat-theme-primary-contrast-#{map.get(map.get($theme-default, primary), lighter)}),
+  primary-darker-contrast: var(--mat-theme-primary-contrast-#{map.get(map.get($theme-default, primary), darker)}),
+  // ACCENT PALETTE
+  accent-50:              palette.convert-hex-to-rgb(palette.calcul-light-hue($accent, $base-light-color, 12%)),
+  accent-100:             palette.convert-hex-to-rgb(palette.calcul-light-hue($accent, $base-light-color, 30%)),
+  accent-200:             palette.convert-hex-to-rgb(palette.calcul-light-hue($accent, $base-light-color, 50%)),
+  accent-300:             palette.convert-hex-to-rgb(palette.calcul-light-hue($accent, $base-light-color, 70%)),
+  accent-400:             palette.convert-hex-to-rgb(palette.calcul-light-hue($accent, $base-light-color, 85%)),
+  accent-500:             palette.convert-hex-to-rgb($accent),
+  accent-600:             palette.convert-hex-to-rgb(palette.calcul-dark-hue($accent, 87%)),
+  accent-700:             palette.convert-hex-to-rgb(palette.calcul-dark-hue($accent, 70%)),
+  accent-800:             palette.convert-hex-to-rgb(palette.calcul-dark-hue($accent, 54%)),
+  accent-900:             palette.convert-hex-to-rgb(palette.calcul-dark-hue($accent, 25%)),
+  accent-A100:            palette.convert-hex-to-rgb(palette.calcul-accent($accent, 80%, 65%)),
+  accent-A200:            palette.convert-hex-to-rgb(palette.calcul-accent($accent, 80%, 55%)),
+  accent-A400:            palette.convert-hex-to-rgb(palette.calcul-accent($accent, 100%, 45%)),
+  accent-A700:            palette.convert-hex-to-rgb(palette.calcul-accent($accent, 100%, 40%)),
+  accent-contrast-50:     accessible-ink-color(palette.calcul-light-hue($accent, $base-light-color, 12%)),
+  accent-contrast-100:    accessible-ink-color(palette.calcul-light-hue($accent, $base-light-color, 30%)),
+  accent-contrast-200:    accessible-ink-color(palette.calcul-light-hue($accent, $base-light-color, 50%)),
+  accent-contrast-300:    accessible-ink-color(palette.calcul-light-hue($accent, $base-light-color, 70%)),
+  accent-contrast-400:    accessible-ink-color(palette.calcul-light-hue($accent, $base-light-color, 85%)),
+  accent-contrast-500:    accessible-ink-color($accent),
+  accent-contrast-600:    accessible-ink-color(palette.calcul-dark-hue($accent, 87%)),
+  accent-contrast-700:    accessible-ink-color(palette.calcul-dark-hue($accent, 70%)),
+  accent-contrast-800:    accessible-ink-color(palette.calcul-dark-hue($accent, 54%)),
+  accent-contrast-900:    accessible-ink-color(palette.calcul-dark-hue($accent, 25%)),
+  accent-contrast-A100:   accessible-ink-color(palette.calcul-accent($accent, 80%, 65%)),
+  accent-contrast-A200:   accessible-ink-color(palette.calcul-accent($accent, 80%, 55%)),
+  accent-contrast-A400:   accessible-ink-color(palette.calcul-accent($accent, 100%, 45%)),
+  accent-contrast-A700:   accessible-ink-color(palette.calcul-accent($accent, 100%, 40%)),
+  accent-default:         var(--mat-theme-accent-#{map.get(map.get($theme-default, accent), default)}),
+  accent-lighter:         var(--mat-theme-accent-#{map.get(map.get($theme-default, accent), lighter)}),
+  accent-darker:          var(--mat-theme-accent-#{map.get(map.get($theme-default, accent), darker)}),
+  accent-text:            var(--mat-theme-accent-#{map.get(map.get($theme-default, accent), text)}),
+  accent-default-contrast: var(--mat-theme-accent-contrast-#{map.get(map.get($theme-default, accent), default)}),
+  accent-lighter-contrast: var(--mat-theme-accent-contrast-#{map.get(map.get($theme-default, accent), lighter)}),
+  accent-darker-contrast: var(--mat-theme-accent-contrast-#{map.get(map.get($theme-default, accent), darker)}),
+  // WARN PALETTE
+  warn-50:                palette.convert-hex-to-rgb(palette.calcul-light-hue($warn, $base-light-color, 12%)),
+  warn-100:               palette.convert-hex-to-rgb(palette.calcul-light-hue($warn, $base-light-color, 30%)),
+  warn-200:               palette.convert-hex-to-rgb(palette.calcul-light-hue($warn, $base-light-color, 50%)),
+  warn-300:               palette.convert-hex-to-rgb(palette.calcul-light-hue($warn, $base-light-color, 70%)),
+  warn-400:               palette.convert-hex-to-rgb(palette.calcul-light-hue($warn, $base-light-color, 85%)),
+  warn-500:               palette.convert-hex-to-rgb($warn),
+  warn-600:               palette.convert-hex-to-rgb(palette.calcul-dark-hue($warn, 87%)),
+  warn-700:               palette.convert-hex-to-rgb(palette.calcul-dark-hue($warn, 70%)),
+  warn-800:               palette.convert-hex-to-rgb(palette.calcul-dark-hue($warn, 54%)),
+  warn-900:               palette.convert-hex-to-rgb(palette.calcul-dark-hue($warn, 25%)),
+  warn-A100:              palette.convert-hex-to-rgb(palette.calcul-accent($warn, 80%, 65%)),
+  warn-A200:              palette.convert-hex-to-rgb(palette.calcul-accent($warn, 80%, 55%)),
+  warn-A400:              palette.convert-hex-to-rgb(palette.calcul-accent($warn, 100%, 45%)),
+  warn-A700:              palette.convert-hex-to-rgb(palette.calcul-accent($warn, 100%, 40%)),
+  warn-contrast-50:       accessible-ink-color(palette.calcul-light-hue($warn, $base-light-color, 12%)),
+  warn-contrast-100:      accessible-ink-color(palette.calcul-light-hue($warn, $base-light-color, 30%)),
+  warn-contrast-200:      accessible-ink-color(palette.calcul-light-hue($warn, $base-light-color, 50%)),
+  warn-contrast-300:      accessible-ink-color(palette.calcul-light-hue($warn, $base-light-color, 70%)),
+  warn-contrast-400:      accessible-ink-color(palette.calcul-light-hue($warn, $base-light-color, 85%)),
+  warn-contrast-500:      accessible-ink-color($warn),
+  warn-contrast-600:      accessible-ink-color(palette.calcul-dark-hue($warn, 87%)),
+  warn-contrast-700:      accessible-ink-color(palette.calcul-dark-hue($warn, 70%)),
+  warn-contrast-800:      accessible-ink-color(palette.calcul-dark-hue($warn, 54%)),
+  warn-contrast-900:      accessible-ink-color(palette.calcul-dark-hue($warn, 25%)),
+  warn-contrast-A100:     accessible-ink-color(palette.calcul-accent($warn, 80%, 65%)),
+  warn-contrast-A200:     accessible-ink-color(palette.calcul-accent($warn, 80%, 55%)),
+  warn-contrast-A400:     accessible-ink-color(palette.calcul-accent($warn, 100%, 45%)),
+  warn-contrast-A700:     accessible-ink-color(palette.calcul-accent($warn, 100%, 40%)),
+  warn-default:           var(--mat-theme-warn-#{map.get(map.get($theme-default, warn), default)}),
+  warn-lighter:           var(--mat-theme-warn-#{map.get(map.get($theme-default, warn), lighter)}),
+  warn-darker:            var(--mat-theme-warn-#{map.get(map.get($theme-default, warn), darker)}),
+  warn-text:              var(--mat-theme-warn-#{map.get(map.get($theme-default, warn), text)}),
+  warn-default-contrast:  var(--mat-theme-warn-contrast-#{map.get(map.get($theme-default, warn), default)}),
+  warn-lighter-contrast:  var(--mat-theme-warn-contrast-#{map.get(map.get($theme-default, warn), lighter)}),
+  warn-darker-contrast:   var(--mat-theme-warn-contrast-#{map.get(map.get($theme-default, warn), darker)}),
+  // FOREGROUND PROPERTIES
+  base:                   $base-dark-color,
+  divider:                rgba($base-dark-color, .12),
+  disabled:               rgba($base-dark-color, .38),
+  disabled-button:        rgba($base-dark-color, .26),
+  elevation:              black,
+  secondary-text:         rgba($base-dark-color, .54),
+  icon:                   rgba($base-dark-color, .54),
+  text:                   rgba($base-dark-color, .87),
+  slider-off:             rgba($base-dark-color, .26),
+  slider-off-active:      rgba($base-dark-color, .38),
+  // BACKGROUND PROPERTIES
+  status-bar:             $base-light-status-bar,
+  app-bar:                palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 98%)),
+  background:             palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 98%)),
+  hover:                  rgba($base-dark-color, .04),
+  surface:                $base-light-color,
+  disabled-button-background: rgba($base-dark-color, .12),
+  focused:                rgba($base-dark-color, .38),
+  selected:               palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 88%)),
+  selected-disabled:      palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 74%)),
+  disabled-component:     palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 93%)),
+  unselect-chip:          palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 88%)),
+  tooltip:                palette.convert-hex-to-rgb(palette.calcul-light-hue($base-light-color, $base-dark-color, 38%))
+);
+
+/// Create background color mixing with primary color
+/// @link https://material.io/design/color/dark-theme.html#ui-application
+/// @param {Color} $primary-color [$primary] - Primary color
+/// @param {Color} $background-color [$base-dark-color] - Background color
+/// @param {Percentage} $percentage [8%] - Percentage to mix enter primary and background colors
+
+@function darkThemeMixToPrimary($primary-color: $primary, $background-color: $base-dark-color, $percentage: 8%) {
+  @return color.mix($primary-color, $background-color, $weight: $percentage);
+}
+
+$property-values-dark: (
+  base:                         $base-light-color,
+  divider:                      rgba($base-light-color, .12),
+  disabled:                     rgba($base-light-color, .5),
+  disabled-button:              rgba($base-light-color, .3),
+  secondary-text:               rgba($base-light-color, .7),
+  icon:                         $base-light-color,
+  text:                         $base-light-color,
+  slider-off:                   rgba($base-light-color, .3),
+  slider-off-active:            rgba($base-light-color, .3),
+  status-bar:                   $base-dark-status-bar,
+  app-bar:                      palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 87%)),
+  hover:                        rgba($base-light-color, .04),
+  surface:                      palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 75%)),
+  disabled-button-background:   rgba($base-light-color, .12),
+  focused:                      rgba($base-light-color, .38),
+  selected:                     palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 87%)),
+  selected-disabled:            palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 75%)),
+  disabled-component:           black,
+  unselect-chip:                palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 62%)),
+  tooltip:                      palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 62%))
+);
+
+@if map.get($theme-default, darkThemeMixToPrimary) != false {
+  $property-values-dark: map.merge($property-values-dark, (
+    background: darkThemeMixToPrimary($background-color: map.get($theme-default, darkBackground)),
+    surface: darkThemeMixToPrimary($background-color: palette.convert-hex-to-rgb(palette.calcul-light-hue($base-dark-color, $base-light-color, 75%)))
+  ));
+}
+@else {
+  $property-values-dark: map.merge($property-values-dark, (
+    background: map.get($theme-default, darkBackground)
+  ));
+}
+
+
+/// FUNCTIONS GOOGLE _theme-color in MDC COMPONENT
+
+///
+/// @param $color Target color in any color format.
+/// @return Returns hash in string format that uniquely represents
+///     any given color format. Useful for generating unique keyframe names.
+/// @example
+///   `color-hash(#6200ee)` => "6200ee"
+///   `color-hash(rgb(255, 112, 112))` => "ff7070"
+///   `color-hash((varname: --my-fancy-color, fallback: teal))` => 'teal'
+///   `color-hash((varname: --my-fancy-color, fallback: null))` => '--my-fancy-color'
+///
+@function color-hash($color) {
+  @if custom-properties.is-custom-prop($color) {
+    $color-value: custom-properties.get-fallback($color);
+
+    @if ($color-value) {
+      @return _get-hex-string($color-value);
+    } @else {
+      @return custom-properties.get-varname($color);
+    }
+  }
+
+  @if meta.type-of($color) == 'string' {
+    @return $color;
+  }
+
+  @return _get-hex-string($color);
+}
+
+@function _get-hex-string($color) {
+  @return string.slice(color.ie-hex-str($color), 2); // Index starts at 1
+}
+
+@function prop-value($style) {
+  @if custom-properties.is-custom-prop($style) {
+    @return custom-properties.get-fallback($style);
+  }
+
+  @if is-valid-theme-prop-value_($style) {
+    @return $style;
+  }
+
+  @if not map.has-key($property-values, $style) {
+    @error "Invalid theme property: '#{$style}'. Choose one of: #{map.keys($property-values)}";
+  }
+
+  @return map.get($property-values, $style);
+}
+
+@function is-valid-theme-prop-value_($style) {
+  @return meta.type-of($style) == 'color' or $style == 'currentColor' or
+    str_slice($style, 1, 4) == 'var(' or $style == 'inherit' or $style ==
+    'transparent' or
+    // NOTE: `GrayText` is deprecated, but is the only feasible way to convey the
+    // correct high-contrast mode colors in alignment with Windows system colors.
+    $style == 'GrayText';
+}
+
+@function text-emphasis($emphasis) {
+  @return map.get($text-emphasis, $emphasis);
+}
+
+@function get-custom-property($color) {
+  @if custom-properties.is-custom-prop($color) or
+    is-valid-theme-prop-value_($color)
+  {
+    @return $color;
+  } @else if map.has-key($property-values, $color) {
+    @return custom-properties.create(
+      --mat-theme-#{$color},
+      map.get($property-values, $color)
+    );
+  } @else {
+    @error "Invalid theme property: '#{$style}'. Choose one of: #{map.keys($property-values)}";
+  }
+}
